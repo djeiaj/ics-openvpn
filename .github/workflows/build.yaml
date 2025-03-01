@@ -1,4 +1,4 @@
-name: Build ICS-OpenVPN with Custom App Name
+name: Build ICS-OpenVPN with Custom App Name, Icon, and Signed Release
 
 on:
   push:
@@ -27,9 +27,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y swig
 
+      # 修改应用名称
       - name: Modify app_name to apptest
         run: |
           sed -i 's|<string name="app_name">.*</string>|<string name="app_name">apptest</string>|' main/src/main/res/values/strings.xml
+
+      # 替换应用图标
+      - name: Replace app icon
+        run: |
+          echo "${{ secrets.NEW_ICON_BASE64 }}" | base64 -d > new_icon.png
+          sudo apt-get install -y imagemagick
+          convert new_icon.png -resize 48x48 main/src/main/res/mipmap-mdpi/ic_launcher.png
+          convert new_icon.png -resize 72x72 main/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert new_icon.png -resize 96x96 main/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert new_icon.png -resize 144x144 main/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert new_icon.png -resize 192x192 main/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          rm new_icon.png
 
       - name: Initialize and update submodules
         run: |
@@ -40,8 +53,8 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8" >> gradle.properties
 
-      # 添加签名文件
-      - name: Decode and write keystore file
+      # 配置签名文件（支持 ovpn23 和 ovpn2）
+      - name: Configure signing properties
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -49,16 +62,23 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_FILE" | base64 -d > my-release-key.jks
-          echo "storeFile=file:///$(pwd)/my-release-key.jks" >> signing.properties
-          echo "storePassword=$KEYSTORE_PASSWORD" >> signing.properties
-          echo "keyAlias=$KEY_ALIAS" >> signing.properties
-          echo "keyPassword=$KEY_PASSWORD" >> signing.properties
+          cat <<EOF >> gradle.properties
+          keystoreFile=$(pwd)/my-release-key.jks
+          keystorePassword=$KEYSTORE_PASSWORD
+          keystoreAlias=$KEY_ALIAS
+          keystoreAliasPassword=$KEY_PASSWORD
+          keystoreO2File=$(pwd)/my-release-key.jks
+          keystoreO2Password=$KEYSTORE_PASSWORD
+          keystoreO2Alias=$KEY_ALIAS
+          keystoreO2AliasPassword=$KEY_PASSWORD
+          EOF
 
+      # 构建项目
       - name: Build with Gradle
         working-directory: ./main
         run: |
           chmod +x ../gradlew
-          ../gradlew build --stacktrace  # 构建所有变体，包括 Release
+          ../gradlew build --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
