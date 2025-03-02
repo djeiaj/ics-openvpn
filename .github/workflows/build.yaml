@@ -26,7 +26,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y swig
-
+          
+          # 修改包名为 filereader
+      - name: Modify package name to filereader
+        run: |
+          # 修改 AndroidManifest.xml 中的 package
+          sed -i 's|package="de.blinkt.openvpn"|package="filereader"|' main/src/main/AndroidManifest.xml
+          # 修改 build.gradle 中的 namespace
+          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle
+          # 调试：输出修改后的文件
+          echo "Modified AndroidManifest.xml:"
+          cat main/src/main/AndroidManifest.xml
+          echo "Modified build.gradle:"
+          grep "namespace" main/build.gradle
+      
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
         run: |
@@ -42,7 +55,7 @@ jobs:
           convert new_icon.png -resize 96x96 main/src/main/res/mipmap-xhdpi/ic_launcher.png
           convert new_icon.png -resize 144x144 main/src/main/res/mipmap-xxhdpi/ic_launcher.png
           convert new_icon.png -resize 192x192 main/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          rm new_icon.png
+          
 
       - name: Initialize and update submodules
         run: |
