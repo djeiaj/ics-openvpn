@@ -33,7 +33,7 @@ jobs:
           # 修改 AndroidManifest.xml 中的 package
           sed -i 's|package="de.blinkt.openvpn"|package="filereader"|' main/src/main/AndroidManifest.xml
           # 修改 build.gradle 中的 namespace
-          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle.jtk
+          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle.kts
           # 调试：输出修改后的文件
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
