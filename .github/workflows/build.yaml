@@ -1,4 +1,4 @@
-name: Build ICS-OpenVPN with Custom App Name, Icon, and Signed Release
+name: Build ICS-OpenVPN Release with Custom Package Name, App Name, and Icon
 
 on:
   push:
@@ -26,24 +26,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y swig
-          
-          # 修改包名为 filereader
+
+      # 修改包名为 filereader
       - name: Modify package name to filereader
         run: |
           # 修改 AndroidManifest.xml 中的 package
           sed -i 's|package="de.blinkt.openvpn"|package="filereader"|' main/src/main/AndroidManifest.xml
           # 修改 build.gradle 中的 namespace
-          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle
+          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle.jtk
           # 调试：输出修改后的文件
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle:"
           grep "namespace" main/build.gradle
-      
+
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
         run: |
           sed -i 's|<string name="app">.*</string>|<string name="app">filereader</string>|' main/src/main/res/values/strings.xml
+          echo "Modified strings.xml:"
+          cat main/src/main/res/values/strings.xml
 
       # 替换应用图标
       - name: Replace app icon
@@ -55,7 +57,7 @@ jobs:
           convert new_icon.png -resize 96x96 main/src/main/res/mipmap-xhdpi/ic_launcher.png
           convert new_icon.png -resize 144x144 main/src/main/res/mipmap-xxhdpi/ic_launcher.png
           convert new_icon.png -resize 192x192 main/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          
+          rm new_icon.png
 
       - name: Initialize and update submodules
         run: |
@@ -92,15 +94,15 @@ jobs:
           echo "Generated gradle.properties:"
           cat gradle.properties
 
-      # 构建项目
-      - name: Build with Gradle
+      # 只构建 Release 版本
+      - name: Build Release with Gradle
         working-directory: ./main
         run: |
           chmod +x ../gradlew
-          ../gradlew assembleSkeletonOvpn2Release --stacktrace
+          ../gradlew assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: filereader-apk
+          name: filereader-release-apk
           path: main/build/outputs/apk/**/*.apk
