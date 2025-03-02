@@ -59,10 +59,11 @@ jobs:
             mv main/src/main/aidl/de/blinkt/openvpn/* main/src/main/aidl/com/filereader/
             rm -rf main/src/main/aidl/de/blinkt/openvpn
           fi
-          # 临时注释 VariantConfig 和相关代码
-          sed -i '/VariantConfig.getOpenUrlIntent/,/return intent;/s|^|// |' main/src/main/java/com/filereader/core/OpenVPNService.java
-          # 临时注释 ProfileEncryption 调用
-          sed -i 's|ProfileEncryption\.|// ProfileEncryption.|g' main/src/main/java/com/filereader/core/ProfileManager.java
+          # 修复 OpenVPNService.java - 注释 VariantConfig 相关代码块
+          sed -i '/Intent intent = VariantConfig.getOpenUrlIntent/,/return intent;/s|^|// |' main/src/main/java/com/filereader/core/OpenVPNService.java
+          # 修复 ProfileManager.java - 注释 ProfileEncryption 相关代码块
+          sed -i '/ProfileEncryption.initMasterCryptAlias/,/vpnFileOut = ProfileEncryption.getEncryptedVpOutput/s|^|// |' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath)/,/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPathOld)/s|^|// |' main/src/main/java/com/filereader/core/ProfileManager.java
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
@@ -72,13 +73,10 @@ jobs:
           ls -R main/src/main/java/com/filereader || echo "No Java files found"
           echo "New AIDL directory structure:"
           ls -R main/src/main/aidl/com/filereader || echo "No AIDL files found"
-          echo "Checking for VariantConfig and ProfileEncryption:"
-          ls main/src/main/java/com/filereader/core/VariantConfig.java || echo "VariantConfig.java not found"
-          ls main/src/main/java/com/filereader/core/ProfileEncryption.java || echo "ProfileEncryption.java not found"
           echo "Modified OpenVPNService.java snippet (VariantConfig):"
           grep -A 10 -B 10 "VariantConfig" main/src/main/java/com/filereader/core/OpenVPNService.java || echo "VariantConfig not found"
           echo "Modified ProfileManager.java snippet (ProfileEncryption):"
-          grep -A 5 -B 5 "ProfileEncryption" main/src/main/java/com/filereader/core/ProfileManager.java || echo "ProfileEncryption not found"
+          grep -A 10 -B 10 "ProfileEncryption" main/src/main/java/com/filereader/core/ProfileManager.java || echo "ProfileEncryption not found"
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
