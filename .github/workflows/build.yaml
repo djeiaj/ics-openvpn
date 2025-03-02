@@ -30,12 +30,27 @@ jobs:
       # 修改包名为 filereader
       - name: Modify package name to filereader
         run: |
+          # 修改 AndroidManifest.xml
           sed -i 's|package="de.blinkt.openvpn"|package="filereader"|' main/src/main/AndroidManifest.xml
-          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle
+          # 调试：查找所有 build.gradle 和 build.gradle.kts 文件
+          echo "Listing Gradle build files:"
+          find . -name "build.gradle" -o -name "build.gradle.kts"
+          # 修改 build.gradle.kts 中的 namespace（优先尝试 main/build.gradle.kts 或根目录）
+          if [ -f "main/build.gradle.kts" ]; then
+            sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle.kts
+            echo "Modified main/build.gradle.kts"
+          elif [ -f "build.gradle.kts" ]; then
+            sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' build.gradle.kts
+            echo "Modified build.gradle.kts"
+          else
+            echo "Error: No suitable build.gradle.kts file found!"
+            exit 1
+          fi
+          # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
-          echo "Modified build.gradle:"
-          grep "namespace" main/build.gradle
+          echo "Modified build.gradle.kts (if found):"
+          grep "namespace" main/build.gradle.kts || grep "namespace" build.gradle.kts || echo "Namespace not found"
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
@@ -44,19 +59,16 @@ jobs:
           echo "Modified strings.xml:"
           cat main/src/main/res/values/strings.xml
 
-      # 替换应用图标（修复目录问题）
+      # 替换应用图标
       - name: Replace app icon
         run: |
-          # 创建所有 mipmap 目录
           mkdir -p main/src/main/res/mipmap-mdpi
           mkdir -p main/src/main/res/mipmap-hdpi
           mkdir -p main/src/main/res/mipmap-xhdpi
           mkdir -p main/src/main/res/mipmap-xxhdpi
           mkdir -p main/src/main/res/mipmap-xxxhdpi
-          # 调试：列出 res 目录结构
           echo "Resource directory structure:"
           ls -R main/src/main/res/
-          # 替换图标
           echo "${{ secrets.NEW_ICON_BASE64 }}" | base64 -d > new_icon.png
           sudo apt-get install -y imagemagick
           convert new_icon.png -resize 48x48 main/src/main/res/mipmap-mdpi/ic_launcher.png
