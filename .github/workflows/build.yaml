@@ -28,9 +28,9 @@ jobs:
           sudo apt-get install -y swig
 
       # 修改应用名称为 filereader
-      - name: Modify app_name to filereader
+      - name: Modify app name to filereader
         run: |
-          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">filereader</string>|' main/src/main/res/values/strings.xml
+          sed -i 's|<string name="app">.*</string>|<string name="app">filereader</string>|' main/src/main/res/values/strings.xml
 
       # 替换应用图标
       - name: Replace app icon
