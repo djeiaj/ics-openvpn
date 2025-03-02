@@ -38,7 +38,7 @@ jobs:
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle:"
-          grep "namespace" main/build.gradle
+          grep "namespace" main/build.gradle.kts
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
