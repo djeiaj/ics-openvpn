@@ -27,10 +27,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y swig
 
-      # 修改应用名称
-      - name: Modify app_name to apptest
+      # 修改应用名称为 filereader
+      - name: Modify app_name to filereader
         run: |
-          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">apptest</string>|' main/src/main/res/values/strings.xml
+          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">filereader</string>|' main/src/main/res/values/strings.xml
 
       # 替换应用图标
       - name: Replace app icon
@@ -53,7 +53,7 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8" >> gradle.properties
 
-      # 配置签名文件（支持 ovpn23 和 ovpn2）
+      # 配置签名文件并调试
       - name: Configure signing properties
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
@@ -62,6 +62,10 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_FILE" | base64 -d > my-release-key.jks
+          echo "Keystore file size:"
+          ls -l my-release-key.jks
+          echo "Keystore contents:"
+          keytool -list -keystore my-release-key.jks -storepass "$KEYSTORE_PASSWORD"
           cat <<EOF >> gradle.properties
           keystoreFile=$(pwd)/my-release-key.jks
           keystorePassword=$KEYSTORE_PASSWORD
@@ -72,6 +76,8 @@ jobs:
           keystoreO2Alias=$KEY_ALIAS
           keystoreO2AliasPassword=$KEY_PASSWORD
           EOF
+          echo "Generated gradle.properties:"
+          cat gradle.properties
 
       # 构建项目
       - name: Build with Gradle
@@ -83,5 +89,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apptest-apk
+          name: filereader-apk
           path: main/build/outputs/apk/**/*.apk
