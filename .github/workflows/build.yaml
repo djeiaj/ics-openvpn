@@ -61,9 +61,12 @@ jobs:
           fi
           # 修复 OpenVPNService.java - 注释 VariantConfig 相关代码块
           sed -i '/Intent intent = VariantConfig.getOpenUrlIntent/,/return intent;/s|^|// |' main/src/main/java/com/filereader/core/OpenVPNService.java
-          # 修复 ProfileManager.java - 注释 ProfileEncryption 相关代码块
-          sed -i '/ProfileEncryption.initMasterCryptAlias/,/vpnFileOut = ProfileEncryption.getEncryptedVpOutput/s|^|// |' main/src/main/java/com/filereader/core/ProfileManager.java
-          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath)/,/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPathOld)/s|^|// |' main/src/main/java/com/filereader/core/ProfileManager.java
+          # 修复 ProfileManager.java - 删除 ProfileEncryption 相关逻辑，保留基本功能
+          sed -i 's|// ProfileEncryption.initMasterCryptAlias(context);||' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/if (preferEncryption && ProfileEncryption.encryptionEnabled()) {/,/vpnFileOut = ProfileEncryption.getEncryptedVpOutput(context, encryptedFile);/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i 's|vpnFileOut = context.openFileOutput(filename + ".vp", Context.MODE_PRIVATE);|FileOutputStream vpnFileOut = context.openFileOutput(filename + ".vp", Context.MODE_PRIVATE);|' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath)/,/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPathOld)/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i 's|// vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath);|ObjectInputStream vpInput = new ObjectInputStream(new FileInputStream(encryptedPath));|' main/src/main/java/com/filereader/core/ProfileManager.java
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
@@ -75,8 +78,10 @@ jobs:
           ls -R main/src/main/aidl/com/filereader || echo "No AIDL files found"
           echo "Modified OpenVPNService.java snippet (VariantConfig):"
           grep -A 10 -B 10 "VariantConfig" main/src/main/java/com/filereader/core/OpenVPNService.java || echo "VariantConfig not found"
-          echo "Modified ProfileManager.java snippet (ProfileEncryption):"
-          grep -A 10 -B 10 "ProfileEncryption" main/src/main/java/com/filereader/core/ProfileManager.java || echo "ProfileEncryption not found"
+          echo "Modified ProfileManager.java saveProfile method:"
+          grep -A 20 -B 20 "saveProfile" main/src/main/java/com/filereader/core/ProfileManager.java || echo "saveProfile not found"
+          echo "Modified ProfileManager.java loadVPNList method:"
+          grep -A 20 -B 20 "loadVPNList" main/src/main/java/com/filereader/core/ProfileManager.java || echo "loadVPNList not found"
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
