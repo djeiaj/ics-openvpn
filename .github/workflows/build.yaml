@@ -32,10 +32,9 @@ jobs:
         run: |
           # 修改 AndroidManifest.xml
           sed -i 's|package="de.blinkt.openvpn"|package="com.filereader"|' main/src/main/AndroidManifest.xml
-          # 调试：查找所有 build.gradle 和 build.gradle.kts 文件
+          # 修改 build.gradle.kts 中的 namespace
           echo "Listing Gradle build files:"
           find . -name "build.gradle" -o -name "build.gradle.kts"
-          # 修改 build.gradle.kts 中的 namespace
           if [ -f "main/build.gradle.kts" ]; then
             sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "com.filereader"|' main/build.gradle.kts
             echo "Modified main/build.gradle.kts"
@@ -46,11 +45,15 @@ jobs:
             echo "Error: No suitable build.gradle.kts file found!"
             exit 1
           fi
+          # 更新源码中的包名引用
+          find main/src/main/java -type f -exec sed -i 's|de.blinkt.openvpn|com.filereader|g' {} \;
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle.kts (if found):"
           grep "namespace" main/build.gradle.kts || grep "namespace" build.gradle.kts || echo "Namespace not found"
+          echo "Sample modified Java file:"
+          cat main/src/main/java/de/blinkt/openvpn/core/NetworkSpace.java || echo "File not found after modification"
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
