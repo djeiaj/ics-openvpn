@@ -61,12 +61,13 @@ jobs:
           fi
           # 修复 OpenVPNService.java - 注释 VariantConfig 相关代码块
           sed -i '/Intent intent = VariantConfig.getOpenUrlIntent/,/return intent;/s|^|// |' main/src/main/java/com/filereader/core/OpenVPNService.java
-          # 修复 ProfileManager.java - 删除 ProfileEncryption 相关逻辑，保留基本功能
-          sed -i 's|// ProfileEncryption.initMasterCryptAlias(context);||' main/src/main/java/com/filereader/core/ProfileManager.java
-          sed -i '/if (preferEncryption && ProfileEncryption.encryptionEnabled()) {/,/vpnFileOut = ProfileEncryption.getEncryptedVpOutput(context, encryptedFile);/d' main/src/main/java/com/filereader/core/ProfileManager.java
-          sed -i 's|vpnFileOut = context.openFileOutput(filename + ".vp", Context.MODE_PRIVATE);|FileOutputStream vpnFileOut = context.openFileOutput(filename + ".vp", Context.MODE_PRIVATE);|' main/src/main/java/com/filereader/core/ProfileManager.java
-          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath)/,/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPathOld)/d' main/src/main/java/com/filereader/core/ProfileManager.java
-          sed -i 's|// vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath);|ObjectInputStream vpInput = new ObjectInputStream(new FileInputStream(encryptedPath));|' main/src/main/java/com/filereader/core/ProfileManager.java
+          # 修复 ProfileManager.java - 移除 ProfileEncryption 并确保语法完整
+          sed -i '/ProfileEncryption.initMasterCryptAlias/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/if (preferEncryption && ProfileEncryption.encryptionEnabled()) {/,/}/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i 's|File encryptedFile = context.getFileStreamPath(filename + ".cp");|File encryptedFile = context.getFileStreamPath(filename + ".cp");\n            FileOutputStream vpnFileOut = context.openFileOutput(filename + ".vp", Context.MODE_PRIVATE);|' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPath)/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i '/vpInput = ProfileEncryption.getEncryptedVpInput(context, encryptedPathOld)/d' main/src/main/java/com/filereader/core/ProfileManager.java
+          sed -i 's|ObjectInputStream vpInput = new ObjectInputStream(new FileInputStream(encryptedPath));|ObjectInputStream vpInput = new ObjectInputStream(new FileInputStream(encryptedPath));\n                VpnProfile vp = ((VpnProfile) vpInput.readObject());|' main/src/main/java/com/filereader/core/ProfileManager.java
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
