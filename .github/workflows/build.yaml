@@ -27,7 +27,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y swig
 
-      # 修改包名为 com.filereader
+      # 修改包名为 com.filereader 并移动源码目录
       - name: Modify package name to com.filereader
         run: |
           # 修改 AndroidManifest.xml
@@ -45,15 +45,18 @@ jobs:
             echo "Error: No suitable build.gradle.kts file found!"
             exit 1
           fi
-          # 更新源码中的包名引用
+          # 更新源码中的包名引用并移动目录
           find main/src/main/java -type f -exec sed -i 's|de.blinkt.openvpn|com.filereader|g' {} \;
+          mkdir -p main/src/main/java/com/filereader
+          mv main/src/main/java/de/blinkt/openvpn/* main/src/main/java/com/filereader/ || echo "No files to move"
+          rm -rf main/src/main/java/de/blinkt/openvpn
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle.kts (if found):"
           grep "namespace" main/build.gradle.kts || grep "namespace" build.gradle.kts || echo "Namespace not found"
-          echo "Sample modified Java file:"
-          cat main/src/main/java/de/blinkt/openvpn/core/NetworkSpace.java || echo "File not found after modification"
+          echo "New Java directory structure:"
+          ls -R main/src/main/java/com/filereader
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
