@@ -48,22 +48,34 @@ jobs:
           # 更新源码中的包名引用并移动目录
           find main/src/main/java -type f -exec sed -i 's|de.blinkt.openvpn|com.filereader|g' {} \;
           mkdir -p main/src/main/java/com/filereader
-          mv main/src/main/java/de/blinkt/openvpn/* main/src/main/java/com/filereader/ || echo "No Java files to move"
-          rm -rf main/src/main/java/de/blinkt/openvpn
+          if [ -d "main/src/main/java/de/blinkt/openvpn" ]; then
+            mv main/src/main/java/de/blinkt/openvpn/* main/src/main/java/com/filereader/
+            rm -rf main/src/main/java/de/blinkt/openvpn
+          else
+            echo "No de.blinkt.openvpn directory found, assuming already moved"
+          fi
           # 更新 AIDL 文件中的包名并移动目录
           find main/src/main/aidl -type f -exec sed -i 's|de.blinkt.openvpn|com.filereader|g' {} \;
           mkdir -p main/src/main/aidl/com/filereader
-          mv main/src/main/aidl/de/blinkt/openvpn/* main/src/main/aidl/com/filereader/ || echo "No AIDL files to move"
-          rm -rf main/src/main/aidl/de/blinkt/openvpn
+          if [ -d "main/src/main/aidl/de/blinkt/openvpn" ]; then
+            mv main/src/main/aidl/de/blinkt/openvpn/* main/src/main/aidl/com/filereader/
+            rm -rf main/src/main/aidl/de/blinkt/openvpn
+          else
+            echo "No AIDL de.blinkt.openvpn directory found, assuming already moved"
+          fi
           # 调试输出
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle.kts (if found):"
           grep "namespace" main/build.gradle.kts || grep "namespace" build.gradle.kts || echo "Namespace not found"
           echo "New Java directory structure:"
-          ls -R main/src/main/java/com/filereader
+          ls -R main/src/main/java/com/filereader || echo "No Java files found"
           echo "New AIDL directory structure:"
           ls -R main/src/main/aidl/com/filereader || echo "No AIDL files found"
+          # 检查 VariantConfig 和 ProfileEncryption 是否存在
+          echo "Checking for VariantConfig and ProfileEncryption:"
+          ls main/src/main/java/com/filereader/core/VariantConfig.java || echo "VariantConfig.java not found"
+          ls main/src/main/java/com/filereader/core/ProfileEncryption.java || echo "ProfileEncryption.java not found"
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
