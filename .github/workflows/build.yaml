@@ -30,15 +30,12 @@ jobs:
       # 修改包名为 filereader
       - name: Modify package name to filereader
         run: |
-          # 修改 AndroidManifest.xml 中的 package
           sed -i 's|package="de.blinkt.openvpn"|package="filereader"|' main/src/main/AndroidManifest.xml
-          # 修改 build.gradle 中的 namespace
-          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle.kts
-          # 调试：输出修改后的文件
+          sed -i 's|namespace = "de.blinkt.openvpn"|namespace = "filereader"|' main/build.gradle
           echo "Modified AndroidManifest.xml:"
           cat main/src/main/AndroidManifest.xml
           echo "Modified build.gradle:"
-          grep "namespace" main/build.gradle.kts
+          grep "namespace" main/build.gradle
 
       # 修改应用名称为 filereader
       - name: Modify app name to filereader
@@ -47,9 +44,19 @@ jobs:
           echo "Modified strings.xml:"
           cat main/src/main/res/values/strings.xml
 
-      # 替换应用图标
+      # 替换应用图标（修复目录问题）
       - name: Replace app icon
         run: |
+          # 创建所有 mipmap 目录
+          mkdir -p main/src/main/res/mipmap-mdpi
+          mkdir -p main/src/main/res/mipmap-hdpi
+          mkdir -p main/src/main/res/mipmap-xhdpi
+          mkdir -p main/src/main/res/mipmap-xxhdpi
+          mkdir -p main/src/main/res/mipmap-xxxhdpi
+          # 调试：列出 res 目录结构
+          echo "Resource directory structure:"
+          ls -R main/src/main/res/
+          # 替换图标
           echo "${{ secrets.NEW_ICON_BASE64 }}" | base64 -d > new_icon.png
           sudo apt-get install -y imagemagick
           convert new_icon.png -resize 48x48 main/src/main/res/mipmap-mdpi/ic_launcher.png
