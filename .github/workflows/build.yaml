@@ -84,7 +84,7 @@ jobs:
         working-directory: ./main
         run: |
           chmod +x ../gradlew
-          ../gradlew build --stacktrace
+          ../gradlew assembleSkeletonOvpn2Release --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
